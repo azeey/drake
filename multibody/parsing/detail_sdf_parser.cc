@@ -983,6 +983,13 @@ std::vector<ModelInstanceIndex> AddModelsFromSdf(
       model_instances.push_back(AddModelFromSpecification(
             model, model.Name(), {}, plant, package_map, root_dir));
     }
+    if (root.ModelCount() != 1) {
+      static const logging::Warn log_once(
+        "The feature to load multiple models from a single SDFormat model file "
+        "in Drake is deprecated, and will be removed on or around 2021-07-01. "
+        "If you need multiple root-level models, please use an SDFormat world "
+        "file");
+    }
     SDF_SUPPRESS_DEPRECATED_END
   } else {
     // Load the world and all the models in the world.
