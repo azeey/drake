@@ -996,6 +996,14 @@ class TestSymbolicPolynomial(unittest.TestCase):
         result = p.Differentiate(x)  # = 2ax
         numpy_compare.assert_equal(result.ToExpression(), 2 * a * x)
 
+    def test_integrate(self):
+        e = 3 * a * (x ** 2)
+        p = sym.Polynomial(e, [x])
+        result = p.Integrate(x)  # = ax³
+        numpy_compare.assert_equal(result.ToExpression(), a * x**3)
+        result = p.Integrate(x, -1, 1)  # = 2a
+        numpy_compare.assert_equal(result.ToExpression(), 2 * a)
+
     def test_add_product(self):
         p = sym.Polynomial()
         m = sym.Monomial(x)
@@ -1300,3 +1308,18 @@ class TestDecomposeQuadraticPolynomial(unittest.TestCase):
         self.assertEqual(b[x_idx], 3)
         self.assertEqual(b[y_idx], 2)
         self.assertEqual(b.shape, (2,))
+
+
+class TestDecomposeLumpedParameters(unittest.TestCase):
+    def test(self):
+        x = sym.Variable("x")
+        a = sym.Variable("a")
+        b = sym.Variable("b")
+
+        f = [a + x, a*a*x*x]
+        [W, alpha, w0] = sym.DecomposeLumpedParameters(f, [a, b])
+        numpy_compare.assert_equal(W,
+                                   [[sym.Expression(1), sym.Expression(0)],
+                                    [sym.Expression(0), x*x]])
+        numpy_compare.assert_equal(alpha, [sym.Expression(a), a*a])
+        numpy_compare.assert_equal(w0, [sym.Expression(x), sym.Expression(0)])

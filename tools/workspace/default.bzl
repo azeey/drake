@@ -35,6 +35,7 @@ load("@drake//tools/workspace/gtest:repository.bzl", "gtest_repository")
 load("@drake//tools/workspace/gurobi:repository.bzl", "gurobi_repository")
 load("@drake//tools/workspace/ibex:repository.bzl", "ibex_repository")
 load("@drake//tools/workspace/ignition_math:repository.bzl", "ignition_math_repository")  # noqa
+load("@drake//tools/workspace/ignition_utils:repository.bzl", "ignition_utils_repository")  # noqa
 load("@drake//tools/workspace/intel_realsense_ros:repository.bzl", "intel_realsense_ros_repository")  # noqa
 load("@drake//tools/workspace/ipopt:repository.bzl", "ipopt_repository")
 load("@drake//tools/workspace/jsoncpp:repository.bzl", "jsoncpp_repository")
@@ -56,6 +57,7 @@ load("@drake//tools/workspace/mosek:repository.bzl", "mosek_repository")
 load("@drake//tools/workspace/net_sf_jchart2d:repository.bzl", "net_sf_jchart2d_repository")  # noqa
 load("@drake//tools/workspace/nlopt:repository.bzl", "nlopt_repository")
 load("@drake//tools/workspace/openblas:repository.bzl", "openblas_repository")
+load("@drake//tools/workspace/opencl:repository.bzl", "opencl_repository")
 load("@drake//tools/workspace/opengl:repository.bzl", "opengl_repository")
 load("@drake//tools/workspace/optitrack_driver:repository.bzl", "optitrack_driver_repository")  # noqa
 load("@drake//tools/workspace/org_apache_xmlgraphics_commons:repository.bzl", "org_apache_xmlgraphics_commons_repository")  # noqa
@@ -75,7 +77,6 @@ load("@drake//tools/workspace/sdformat:repository.bzl", "sdformat_repository")
 load("@drake//tools/workspace/semantic_version:repository.bzl", "semantic_version_repository")  # noqa
 load("@drake//tools/workspace/snopt:repository.bzl", "snopt_repository")
 load("@drake//tools/workspace/spdlog:repository.bzl", "spdlog_repository")
-load("@drake//tools/workspace/sphinx:repository.bzl", "sphinx_repository")
 load("@drake//tools/workspace/styleguide:repository.bzl", "styleguide_repository")  # noqa
 load("@drake//tools/workspace/suitesparse:repository.bzl", "suitesparse_repository")  # noqa
 load("@drake//tools/workspace/tinyobjloader:repository.bzl", "tinyobjloader_repository")  # noqa
@@ -167,6 +168,8 @@ def add_default_repositories(excludes = [], mirrors = DEFAULT_MIRRORS):
         ibex_repository(name = "ibex")
     if "ignition_math" not in excludes:
         ignition_math_repository(name = "ignition_math", mirrors = mirrors)
+    if "ignition_utils" not in excludes:
+        ignition_utils_repository(name = "ignition_utils", mirrors = mirrors)
     if "intel_realsense_ros" not in excludes:
         intel_realsense_ros_repository(name = "intel_realsense_ros", mirrors = mirrors)  # noqa
     if "ipopt" not in excludes:
@@ -209,6 +212,8 @@ def add_default_repositories(excludes = [], mirrors = DEFAULT_MIRRORS):
         nlopt_repository(name = "nlopt")
     if "openblas" not in excludes:
         openblas_repository(name = "openblas")
+    if "opencl" not in excludes:
+        opencl_repository(name = "opencl")
     if "opengl" not in excludes:
         opengl_repository(name = "opengl")
     if "optitrack_driver" not in excludes:
@@ -247,8 +252,6 @@ def add_default_repositories(excludes = [], mirrors = DEFAULT_MIRRORS):
         snopt_repository(name = "snopt")
     if "spdlog" not in excludes:
         spdlog_repository(name = "spdlog", mirrors = mirrors)
-    if "sphinx" not in excludes:
-        sphinx_repository(name = "sphinx")
     if "styleguide" not in excludes:
         styleguide_repository(name = "styleguide", mirrors = mirrors)
     if "suitesparse" not in excludes:

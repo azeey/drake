@@ -917,11 +917,15 @@ ModelInstanceIndex AddModelFromSdf(
 
   std::string root_dir = LoadSdf(&root, data_source);
 
-  SDF_SUPPRESS_DEPRECATED_BEGIN
-  if (root.ModelCount() != 1) {
+  // TODO(jwnimmer-tri) When we upgrade to a version of libsdformat that no
+  // longer offers ModelCount(), remove this entire paragraph of code.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+  const uint64_t model_count = root.ModelCount();
+#pragma GCC diagnostic pop
+  if (model_count != 1) {
     throw std::runtime_error("File must have a single <model> element.");
   }
-  SDF_SUPPRESS_DEPRECATED_END
 
   // Get the only model in the file.
   const sdf::Model& model = *root.Model();
@@ -973,24 +977,32 @@ std::vector<ModelInstanceIndex> AddModelsFromSdf(
   std::vector<ModelInstanceIndex> model_instances;
 
   // At this point there should be only Models or a single World at the Root
-  // levelt.
+  // level.
   if (root.Model() != nullptr) {
     // Load all the models at the root level.
-    SDF_SUPPRESS_DEPRECATED_BEGIN
-    for (uint64_t i = 0; i < root.ModelCount(); ++i) {
+    // TODO(jwnimmer-tri) When we upgrade to a version of libsdformat that no
+    // longer offers ModelCount(), we should simplify this entire block by
+    // removing the for-each-model loop, instead just using the root.Model().
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    const uint64_t model_count = root.ModelCount();
+#pragma GCC diagnostic pop
+    if (model_count != 1) {
+      static const logging::Warn log_once(
+        "The feature to load multiple models from a single SDFormat model file "
+        "in Drake is deprecated, and will be removed on or around 2021-08-01. "
+        "If you need multiple root-level models, please use an SDFormat world "
+        "file.");
+    }
+    for (uint64_t i = 0; i < model_count; ++i) {
       // Get the model.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
       const sdf::Model& model = *root.ModelByIndex(i);
+#pragma GCC diagnostic pop
       model_instances.push_back(AddModelFromSpecification(
             model, model.Name(), {}, plant, package_map, root_dir));
     }
-    if (root.ModelCount() != 1) {
-      static const logging::Warn log_once(
-        "The feature to load multiple models from a single SDFormat model file "
-        "in Drake is deprecated, and will be removed on or around 2021-07-01. "
-        "If you need multiple root-level models, please use an SDFormat world "
-        "file");
-    }
-    SDF_SUPPRESS_DEPRECATED_END
   } else {
     // Load the world and all the models in the world.
     const sdf::World& world = *root.WorldByIndex(0);

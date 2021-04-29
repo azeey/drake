@@ -8,6 +8,7 @@
 
 #include "drake/bindings/pydrake/autodiff_types_pybind.h"
 #include "drake/bindings/pydrake/common/cpp_param_pybind.h"
+#include "drake/bindings/pydrake/common/deprecation_pybind.h"
 #include "drake/bindings/pydrake/documentation_pybind.h"
 #include "drake/bindings/pydrake/pydrake_pybind.h"
 #include "drake/bindings/pydrake/symbolic_types_pybind.h"
@@ -348,6 +349,7 @@ top-level documentation for :py:mod:`pydrake.math`.
       .def("name", &SolverId::name, doc.SolverId.name.doc);
 
   py::enum_<SolverType>(m, "SolverType", doc.SolverType.doc)
+      .value("kClp", SolverType::kClp, doc.SolverType.kClp.doc)
       .value("kCsdp", SolverType::kCsdp, doc.SolverType.kCsdp.doc)
       .value("kDReal", SolverType::kDReal, doc.SolverType.kDReal.doc)
       .value("kEqualityConstrainedQP", SolverType::kEqualityConstrainedQP,
@@ -579,9 +581,24 @@ top-level documentation for :py:mod:`pydrake.math`.
               const Eigen::Ref<const VectorX<symbolic::Monomial>>&,
               MathematicalProgram::NonnegativePolynomial)>(
               &MathematicalProgram::NewNonnegativePolynomial),
-          py::arg("grammian"), py::arg("monomial_basis"), py::arg("type"),
+          py::arg("gramian"), py::arg("monomial_basis"), py::arg("type"),
           doc.MathematicalProgram.NewNonnegativePolynomial
-              .doc_3args_grammian_monomial_basis_type)
+              .doc_3args_gramian_monomial_basis_type)
+      .def("NewNonnegativePolynomial",
+          WrapDeprecated("Please use "
+                         "MathematicalProgram.NewNonnegativePolynomial(gramian,"
+                         " monomial_basis, type) instead. Notice that the "
+                         "first input argument should be gramian instead of "
+                         "grammian. This variant will be "
+                         "removed after 2021-07-01",
+              static_cast<symbolic::Polynomial (MathematicalProgram::*)(
+                  const Eigen::Ref<const MatrixX<symbolic::Variable>>&,
+                  const Eigen::Ref<const VectorX<symbolic::Monomial>>&,
+                  MathematicalProgram::NonnegativePolynomial)>(
+                  &MathematicalProgram::NewNonnegativePolynomial)),
+          py::arg("grammian"), py::arg("monomial_basis"), py::arg("type"),
+          "Same as NewNonnegativePolynomial, but the argument name is "
+          "incorrectly spelled as grammian")
       .def("NewNonnegativePolynomial",
           static_cast<std::pair<symbolic::Polynomial, MatrixXDecisionVariable> (
               MathematicalProgram::*)(const symbolic::Variables&, int degree,
@@ -1000,6 +1017,8 @@ top-level documentation for :py:mod:`pydrake.math`.
           doc.MathematicalProgram.FindDecisionVariableIndices.doc)
       .def("num_vars", &MathematicalProgram::num_vars,
           doc.MathematicalProgram.num_vars.doc)
+      .def("initial_guess", &MathematicalProgram::initial_guess,
+          doc.MathematicalProgram.initial_guess.doc)
       .def("decision_variables", &MathematicalProgram::decision_variables,
           doc.MathematicalProgram.decision_variables.doc)
       .def("decision_variable_index",
@@ -1151,23 +1170,26 @@ for every column of ``prog_var_vals``. )""")
           py::overload_cast<const SolverId&, const std::string&, double>(
               &MathematicalProgram::SetSolverOption),
           py::arg("solver_id"), py::arg("solver_option"),
-          py::arg("option_value"), doc.MathematicalProgram.SetSolverOption.doc)
+          py::arg("option_value"),
+          doc.MathematicalProgram.SetSolverOption.doc_double_option)
       .def("SetSolverOption",
           py::overload_cast<const SolverId&, const std::string&, int>(
               &MathematicalProgram::SetSolverOption),
           py::arg("solver_id"), py::arg("solver_option"),
-          py::arg("option_value"), doc.MathematicalProgram.SetSolverOption.doc)
+          py::arg("option_value"),
+          doc.MathematicalProgram.SetSolverOption.doc_int_option)
       .def("SetSolverOption",
           py::overload_cast<const SolverId&, const std::string&,
               const std::string&>(&MathematicalProgram::SetSolverOption),
           py::arg("solver_id"), py::arg("solver_option"),
-          py::arg("option_value"), doc.MathematicalProgram.SetSolverOption.doc)
+          py::arg("option_value"),
+          doc.MathematicalProgram.SetSolverOption.doc_string_option)
       .def("SetSolverOption", &SetSolverOptionBySolverType<double>,
-          doc.MathematicalProgram.SetSolverOption.doc)
+          doc.MathematicalProgram.SetSolverOption.doc_double_option)
       .def("SetSolverOption", &SetSolverOptionBySolverType<int>,
-          doc.MathematicalProgram.SetSolverOption.doc)
+          doc.MathematicalProgram.SetSolverOption.doc_int_option)
       .def("SetSolverOption", &SetSolverOptionBySolverType<string>,
-          doc.MathematicalProgram.SetSolverOption.doc)
+          doc.MathematicalProgram.SetSolverOption.doc_string_option)
       .def("SetSolverOptions", &MathematicalProgram::SetSolverOptions,
           doc.MathematicalProgram.SetSolverOptions.doc)
       // TODO(m-chaturvedi) Add Pybind11 documentation.

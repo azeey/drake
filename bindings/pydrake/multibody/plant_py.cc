@@ -52,20 +52,6 @@ int GetVariableSize(const multibody::MultibodyPlant<T>& plant,
   DRAKE_UNREACHABLE();
 }
 
-Eigen::VectorBlock<const VectorX<double>> CopyIfNotPodType(
-    Eigen::VectorBlock<const VectorX<double>> x) {
-  // N.B. This references the existing vector's data, and does not perform a
-  // copy.
-  return x;
-}
-
-template <typename T>
-VectorX<T> CopyIfNotPodType(Eigen::VectorBlock<const VectorX<T>> x) {
-  // N.B. This copies the vector's data.
-  // TODO(eric.cousineau): Remove this once #8116 is resolved.
-  return x;
-}
-
 /**
  * Adds Python bindings for its contents to module `m`, for template `T`.
  * @param m Module.
@@ -246,6 +232,20 @@ void DoScalarDependentDefinitions(py::module m, T) {
         .def("WeldFrames",
             py::overload_cast<const Frame<T>&, const Frame<T>&,
                 const RigidTransform<double>&>(&Class::WeldFrames),
+            py::arg("frame_on_parent_P"), py::arg("frame_on_child_C"),
+            py::arg("X_PC") = RigidTransform<double>::Identity(),
+            py_rvp::reference_internal, cls_doc.WeldFrames.doc)
+        .def(
+            "WeldFrames",
+            [](Class* self, const Frame<T>& A, const Frame<T>& B,
+                const RigidTransform<double>& X_AB) -> const WeldJoint<T>& {
+              WarnDeprecated(
+                  "Please use MultibodyPlant.WeldFrames("
+                  "frame_on_parent_P=value1, frame_on_child_C=value2,"
+                  " X_PC=value3) instead. This variant will be removed"
+                  " after 2021-07-01.");
+              return self->WeldFrames(A, B, X_AB);
+            },
             py::arg("A"), py::arg("B"),
             py::arg("X_AB") = RigidTransform<double>::Identity(),
             py_rvp::reference_internal, cls_doc.WeldFrames.doc)
@@ -735,7 +735,10 @@ void DoScalarDependentDefinitions(py::module m, T) {
             },
             py::arg("body"), cls_doc.GetBodiesWeldedTo.doc)
         .def("GetTopologyGraphvizString", &Class::GetTopologyGraphvizString,
-            cls_doc.GetTopologyGraphvizString.doc);
+            cls_doc.GetTopologyGraphvizString.doc)
+        .def("get_force_element", &Class::get_force_element,
+            py::arg("force_element_index"), py_rvp::reference_internal,
+            cls_doc.get_force_element.doc);
     // Geometry.
     cls  // BR
         .def("RegisterAsSourceForSceneGraph",

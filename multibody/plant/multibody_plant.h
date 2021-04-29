@@ -914,7 +914,8 @@ class MultibodyPlant : public internal::MultibodyTreeSystem<T> {
   /// and _child_ bodies. The parent/child ordering defines the sign conventions
   /// for the generalized coordinates and the coordinate ordering for multi-DOF
   /// joints.
-  /// @image html multibody/plant/images/BodyParentChildJointCM.png width=50%
+  /// <!-- NOLINTNEXTLINE(whitespace/line_length) -->
+  /// @image html drake/multibody/plant/images/BodyParentChildJointCM.png width=50%
   /// Note: The previous figure also shows Pcm which is body P's center of mass
   /// and point Bcm which is body B's center of mass.
   ///
@@ -1018,14 +1019,18 @@ class MultibodyPlant : public internal::MultibodyTreeSystem<T> {
     return joint;
   }
 
-  /// Welds frames A and B with relative pose `X_AB`. That is, the pose of
-  /// frame B in frame A is fixed, with value `X_AB`.
-  /// The call to this method creates and adds a new WeldJoint to the model.
-  /// The new WeldJoint is named as: A.name() + "_welds_to_" + B.name().
-  /// @returns a constant reference to the WeldJoint welding frames A and B.
-  const WeldJoint<T>& WeldFrames(const Frame<T>& A, const Frame<T>& B,
-                                 const math::RigidTransform<double>& X_AB =
-                                 math::RigidTransform<double>::Identity());
+  /// Welds `frame_on_parent_P` and `frame_on_child_C` with relative pose
+  /// `X_PC`. That is, the pose of frame C in frame P is fixed, with value
+  /// `X_PC`.  If `X_PC` is omitted, the identity transform will be used. The
+  /// call to this method creates and adds a new WeldJoint to the model.  The
+  /// new WeldJoint is named as: P.name() + "_welds_to_" + C.name().
+  /// @returns a constant reference to the WeldJoint welding frames
+  /// P and C.
+  /// @throws std::exception if the weld produces a duplicate joint name.
+  const WeldJoint<T>& WeldFrames(const Frame<T>& frame_on_parent_P,
+                                 const Frame<T>& frame_on_child_C,
+                                 const math::RigidTransform<double>& X_PC =
+                                     math::RigidTransform<double>::Identity());
 
   /// Adds a new force element model of type `ForceElementType` to `this`
   /// %MultibodyPlant.  The arguments to this method `args` are forwarded to

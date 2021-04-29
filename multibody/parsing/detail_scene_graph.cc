@@ -263,7 +263,7 @@ IllustrationProperties MakeVisualPropertiesFromSdfVisual(
   // written to the geometry properties. This breaks the ability of the
   // downstream consumer to supply its own defaults (because it can't
   // distinguish between a value that was specified by the user and one that was
-  // provided by sdformat's default value.
+  // provided by sdformat's default value).
 
   // The existence of a visual element will *always* require an
   // IllustrationProperties instance. How we populate it depends on the material
@@ -315,8 +315,8 @@ IllustrationProperties MakeVisualPropertiesFromSdfVisual(
 
   // TODO(SeanCurtis-TRI): Including this property in illustration properties is
   //  a bit misleading; it isn't used by illustration, but we're not currently
-  //  parsing illustration and perception propeprties separately. So, we stash
-  //  them in the illustration propepties relying on it to be ignored by
+  //  parsing illustration and perception properties separately. So, we stash
+  //  them in the illustration properties relying on it to be ignored by
   //  illustration consumers but copied over to the perception properties.
   const string kAcceptingTag = "drake:accepting_renderer";
   if (visual_element->HasElement(kAcceptingTag)) {
