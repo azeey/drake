@@ -1,6 +1,5 @@
 #include "drake/multibody/parsing/detail_sdf_parser.h"
 
-#include <cstring>
 #include <limits>
 #include <memory>
 #include <optional>
@@ -44,29 +43,6 @@ using std::unique_ptr;
 // Unnamed namespace for free functions local to this file.
 namespace {
 
-const char kSdfScopeDelimiter[] = "::";
-
-// Split a given absolute name into the parent model name and the local name.
-// If the give name is not scoped, this will return an empty string for the
-// parent model name and the given name as the local name.
-std::pair<std::string, std::string> SplitName(
-    const std::string& absolute_name) {
-  const auto pos = absolute_name.rfind(kSdfScopeDelimiter);
-  if (pos != std::string::npos) {
-    const std::string first = absolute_name.substr(0, pos);
-    const std::string second =
-        absolute_name.substr(pos + std::strlen(kSdfScopeDelimiter));
-    return {first, second};
-  }
-  return {"", absolute_name};
-}
-
-// Join an scope name prefix with a local name using the scope delimeter
-std::string JoinName(const std::string& scope_name,
-                     const std::string& local_name) {
-  return scope_name + kSdfScopeDelimiter + local_name;
-}
-
 // The relative_name of an object in this function is the name of the object in
 // the scope of the model associated with the given model_instance. The relative
 // name can contain the scope delimiter to reference objects nested in child
@@ -77,7 +53,7 @@ std::string JoinName(const std::string& scope_name,
 std::pair<ModelInstanceIndex, std::string> GetParentModelInstanceAndLocalName(
     const std::string& relative_name, ModelInstanceIndex model_instance,
     const MultibodyPlant<double>& plant) {
-  auto [parent_name, local_name] = SplitName(relative_name);
+  auto [parent_name, local_name] = sdf::SplitName(relative_name);
   ModelInstanceIndex parent_model_instance = model_instance;
 
   if (!parent_name.empty()) {
@@ -86,8 +62,8 @@ std::pair<ModelInstanceIndex, std::string> GetParentModelInstanceAndLocalName(
     if (world_model_instance() == model_instance) {
       parent_model_instance = plant.GetModelInstanceByName(parent_name);
     } else {
-      const std::string parent_model_absolute_name =
-        JoinName(plant.GetModelInstanceName(model_instance), parent_name);
+      const std::string parent_model_absolute_name = sdf::JoinName(
+          plant.GetModelInstanceName(model_instance), parent_name);
 
       parent_model_instance =
         plant.GetModelInstanceByName(parent_model_absolute_name);
@@ -787,8 +763,8 @@ ModelInstanceIndex AddModelFromSpecification(
        ++model_index) {
     const sdf::Model& nested_model = *model.ModelByIndex(model_index);
     const ModelInstanceIndex nested_model_instance = AddModelFromSpecification(
-        nested_model, JoinName(model_name, nested_model.Name()), X_WM, plant,
-        package_map, root_dir, true);
+        nested_model, sdf::JoinName(model_name, nested_model.Name()), X_WM,
+        plant, package_map, root_dir, true);
 
     plant->AddFrame(std::make_unique<FixedOffsetFrame<double>>(
         nested_model.Name(),
@@ -817,7 +793,8 @@ ModelInstanceIndex AddModelFromSpecification(
       const Frame<double>& canonical_link_frame =
           plant->GetFrameByName(local_name, parent_model_instance);
       const RigidTransformd X_LcM = ResolveRigidTransform(
-          model.SemanticPose(), JoinName(model.Name(), canonical_link_name));
+          model.SemanticPose(),
+          sdf::JoinName(model.Name(), canonical_link_name));
 
       return plant->AddFrame(std::make_unique<FixedOffsetFrame<double>>(
           sdf_model_frame_name, canonical_link_frame, X_LcM, model_instance));
