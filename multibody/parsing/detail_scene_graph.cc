@@ -87,7 +87,11 @@ std::unique_ptr<geometry::Shape> MakeShapeFromSdfGeometry(
 
   switch (sdf_geometry.Type()) {
     case sdf::GeometryType::EMPTY: {
-      // Check for custom geometry tags, e.g. drake:capsule.
+      // TODO(azeey): We should deprecate use of <drake:capsule> and
+      // <drake:ellipsoid> per
+      // https://github.com/RobotLocomotion/drake/issues/14837 Check for custom
+
+      // geometry tags, e.g. drake:capsule.
       if (sdf_geometry.Element()->HasElement("drake:capsule")) {
         const sdf::ElementPtr capsule_element =
             sdf_geometry.Element()->GetElement("drake:capsule");
