@@ -1301,8 +1301,8 @@ GTEST_TEST(SdfParser, ReflectedInertiaParametersParsing) {
   }
 }
 
-// Verifies that the SDF loader can add directly nested models to a multibody
-// plant
+// Verifies that the SDFormat loader can add directly nested models to a
+// multibody plant
 GTEST_TEST(SdfParser, LoadDirectlyNestedModels) {
   {
     // Case 1: Load nested models where the top level model is contained by a
@@ -1435,20 +1435,22 @@ GTEST_TEST(SdfParser, LoadDirectlyNestedModels) {
   }
 }
 
+// Example model taken from
+// http://sdformat.org/tutorials?tut=composition_proposal&cat=pose_semantics_docs&#1-4-4-placement-frame-model-placement_frame-and-include-placement_frame
 GTEST_TEST(SdfParser, ModelPlacementFrame) {
   const std::string model_string = R"""(
-<model name='T'> <!-- Table -->
+<model name='table'> <!-- T -->
   <pose>0 10 0  0 0 0</pose>
-  <link name='S'> <!-- table top -->
+  <link name='table_top'> <!-- S -->
     <pose>0 0 1  0 0 0</pose>
   </link>
 
-  <model name='M' placement_frame='B'> <!-- Mug -->
-    <pose relative_to='S'/>
-    <link name='H'> <!-- Handle -->
+  <model name='mug' placement_frame='base'> <!-- M -->
+    <pose relative_to='table_top'/>
+    <link name='handle'> <!-- H -->
       <pose>0.1 0 0  0 0 0</pose>
     </link>
-    <link name='B'> <!-- Base -->
+    <link name='base'> <!-- B -->
       <pose>0 0 -0.1  0 0 0</pose>
     </link>
   </model>
@@ -1461,28 +1463,29 @@ GTEST_TEST(SdfParser, ModelPlacementFrame) {
   EXPECT_GT(pair.plant->num_positions(), 0);
   auto context = pair.plant->CreateDefaultContext();
 
-  ASSERT_TRUE(pair.plant->HasModelInstanceNamed("T::M"));
-  ModelInstanceIndex model_m = pair.plant->GetModelInstanceByName("T::M");
+  ASSERT_TRUE(pair.plant->HasModelInstanceNamed("table::mug"));
+  ModelInstanceIndex model_m = pair.plant->GetModelInstanceByName("table::mug");
 
-  ASSERT_TRUE(pair.plant->HasFrameNamed("M"));
-  const Frame<double>& frame_M = pair.plant->GetFrameByName("M");
+  ASSERT_TRUE(pair.plant->HasFrameNamed("mug"));
+  const Frame<double>& frame_M = pair.plant->GetFrameByName("mug");
   ASSERT_TRUE(pair.plant->HasFrameNamed("__model__", model_m));
-  // frame M is equivalent to M::__model__
-  EXPECT_TRUE(CompareMatrices(
-      pair.plant->GetFrameByName("__model__", model_m)
-          .CalcPoseInWorld(*context)
-          .GetAsMatrix4(),
-      pair.plant->GetFrameByName("M").CalcPoseInWorld(*context).GetAsMatrix4(),
-      kEps));
+  // frame M is equivalent to mug::__model__
+  EXPECT_TRUE(CompareMatrices(pair.plant->GetFrameByName("__model__", model_m)
+                                  .CalcPoseInWorld(*context)
+                                  .GetAsMatrix4(),
+                              pair.plant->GetFrameByName("mug")
+                                  .CalcPoseInWorld(*context)
+                                  .GetAsMatrix4(),
+                              kEps));
 
-  ASSERT_TRUE(pair.plant->HasFrameNamed("S"));
-  const Frame<double>& frame_S = pair.plant->GetFrameByName("S");
+  ASSERT_TRUE(pair.plant->HasFrameNamed("table_top"));
+  const Frame<double>& frame_S = pair.plant->GetFrameByName("table_top");
 
-  ASSERT_TRUE(pair.plant->HasFrameNamed("B", model_m));
-  const Frame<double>& frame_B = pair.plant->GetFrameByName("B", model_m);
+  ASSERT_TRUE(pair.plant->HasFrameNamed("base", model_m));
+  const Frame<double>& frame_B = pair.plant->GetFrameByName("base", model_m);
 
-  ASSERT_TRUE(pair.plant->HasFrameNamed("H", model_m));
-  const Frame<double>& frame_H = pair.plant->GetFrameByName("H", model_m);
+  ASSERT_TRUE(pair.plant->HasFrameNamed("handle", model_m));
+  const Frame<double>& frame_H = pair.plant->GetFrameByName("handle", model_m);
 
   // X_SM = X_SB * X_MB^-1.
   const RigidTransformd X_SM_expected(RollPitchYawd(0.0, 0.0, 0.0),
@@ -1758,11 +1761,11 @@ GTEST_TEST(SdfParser, SupportNonDefaultCanonicalLink) {
   ASSERT_NE(nullptr, pair.plant);
   pair.plant->Finalize();
 
-  EXPECT_EQ(pair.plant->GetFrameByName("a").body().node_index(),
-            pair.plant->GetBodyByName("e").node_index());
+  EXPECT_EQ(pair.plant->GetFrameByName("a").body().index(),
+            pair.plant->GetBodyByName("e").index());
 
-  EXPECT_EQ(pair.plant->GetFrameByName("c").body().node_index(),
-            pair.plant->GetBodyByName("f").node_index());
+  EXPECT_EQ(pair.plant->GetFrameByName("c").body().index(),
+            pair.plant->GetBodyByName("f").index());
 }
 }  // namespace
 }  // namespace internal
