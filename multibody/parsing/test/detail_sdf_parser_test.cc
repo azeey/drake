@@ -463,6 +463,7 @@ GTEST_TEST(SdfParser, FloatingBodyPose) {
 GTEST_TEST(SdfParser, StaticModelSupported) {
   // Test that static models are partially supported.
   {
+    SCOPED_TRACE("Test that static models are partially supported");
     PlantAndSceneGraph pair = ParseTestString(R"""(
   <model name='good'>
     <static>true</static>
@@ -493,6 +494,8 @@ GTEST_TEST(SdfParser, StaticModelSupported) {
   {
     // Verify that static models don't need to have a canonical link. The model
     // frame should be attached to the world frame.
+    SCOPED_TRACE(
+        "Verify that static models don't need to have a canonical link");
     PlantAndSceneGraph pair;
     DRAKE_ASSERT_NO_THROW(pair = ParseTestString(R"""(
   <model name='a'>
@@ -514,6 +517,8 @@ GTEST_TEST(SdfParser, StaticModelSupported) {
 
   {
     // Verify that models that contain static models don't need a link
+    SCOPED_TRACE(
+        "Verify that models that contain static models don't need a link");
     PlantAndSceneGraph pair;
     DRAKE_EXPECT_NO_THROW(pair = ParseTestString(R"""(
   <model name='a'>
