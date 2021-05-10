@@ -486,7 +486,10 @@ drake_cc_library(
 drake_cc_library(
     name = "plane",
     hdrs = ["plane.h"],
-    deps = ["//common:essential"],
+    deps = [
+        ":mesh_traits",
+        "//common:essential",
+    ],
 )
 
 drake_cc_library(
@@ -813,6 +816,8 @@ drake_cc_googletest(
         ":mesh_half_space_intersection",
         "//common/test_utilities:eigen_matrix_compare",
         "//common/test_utilities:expect_throws_message",
+        "//math:autodiff",
+        "//math:gradient",
     ],
 )
 
@@ -822,6 +827,9 @@ drake_cc_googletest(
         ":mesh_intersection",
         "//common/test_utilities:eigen_matrix_compare",
         "//common/test_utilities:expect_throws_message",
+        "//math:autodiff",
+        "//math:gradient",
+        "//math:orthonormal_basis",
     ],
 )
 
@@ -832,6 +840,9 @@ drake_cc_googletest(
         ":mesh_plane_intersection",
         "//common/test_utilities:eigen_matrix_compare",
         "//common/test_utilities:expect_throws_message",
+        "//math:autodiff",
+        "//math:gradient",
+        "//math:orthonormal_basis",
     ],
 )
 
@@ -916,6 +927,7 @@ drake_cc_googletest(
         ":plane",
         "//common/test_utilities:eigen_matrix_compare",
         "//common/test_utilities:expect_throws_message",
+        "//math:autodiff",
     ],
 )
 
@@ -925,6 +937,7 @@ drake_cc_googletest(
         ":posed_half_space",
         "//common/test_utilities:eigen_matrix_compare",
         "//common/test_utilities:expect_throws_message",
+        "//math:autodiff",
     ],
 )
 

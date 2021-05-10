@@ -121,18 +121,12 @@ def get_index_class(cls, T):
 
 
 # Permits parametric scalar type conversion.
-# TODO(eric.cousineau): Consider hoisting this to `test_utilities` or adding
-# `System.ToType[T]`.
 def to_type(system, T):
     assert isinstance(system, System_[float])
     if T == float:
         return system
-    elif T == AutoDiffXd:
-        return system.ToAutoDiffXd()
-    elif T == Expression:
-        return system.ToSymbolic()
     else:
-        assert False, "Invalid type, {}".format(T)
+        return system.ToScalarType[T]()
 
 
 class TestPlant(unittest.TestCase):
@@ -787,6 +781,13 @@ class TestPlant(unittest.TestCase):
             p_BQi=np.array([[0, 1, 2], [10, 11, 12]]).T,
             frame_A=world_frame).T
         self.assertTupleEqual(p_AQi.shape, (2, 3))
+
+        # Verify CalcTotalMass() calculates a non-zero mass.
+        p_mass = plant.CalcTotalMass(context=context)
+        numpy_compare.assert_float_not_equal(p_mass, 0.)
+        p_mass = plant.CalcTotalMass(
+            context=context, model_instances=[instance])
+        numpy_compare.assert_float_not_equal(p_mass, 0.)
 
         p_com = plant.CalcCenterOfMassPositionInWorld(context=context)
         self.assertTupleEqual(p_com.shape, (3, ))
