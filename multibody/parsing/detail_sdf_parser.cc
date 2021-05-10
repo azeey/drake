@@ -50,27 +50,28 @@ namespace {
 // Given a relative_name to an object, this function returns the model
 // instance that is an immediate parent of the object and the local name of the
 // object. The local name of the object does not have any scoping delimiters.
-std::pair<ModelInstanceIndex, std::string> GetParentModelInstanceAndLocalName(
-    const std::string& relative_name, ModelInstanceIndex model_instance,
+std::pair<ModelInstanceIndex, std::string> GetResolvedModelInstanceAndLocalName(
+    const std::string& relative_nested_name, ModelInstanceIndex model_instance,
     const MultibodyPlant<double>& plant) {
-  auto [parent_name, local_name] = sdf::SplitName(relative_name);
-  ModelInstanceIndex parent_model_instance = model_instance;
+  auto [parent_name, unscoped_local_name] =
+      sdf::SplitName(relative_nested_name);
+  ModelInstanceIndex resolved_model_instance = model_instance;
 
   if (!parent_name.empty()) {
     // If the parent is in the world_model_instance, the name can be looked up
     // from the plant without creating an absolute name.
     if (world_model_instance() == model_instance) {
-      parent_model_instance = plant.GetModelInstanceByName(parent_name);
+      resolved_model_instance = plant.GetModelInstanceByName(parent_name);
     } else {
       const std::string parent_model_absolute_name = sdf::JoinName(
           plant.GetModelInstanceName(model_instance), parent_name);
 
-      parent_model_instance =
+      resolved_model_instance =
         plant.GetModelInstanceByName(parent_model_absolute_name);
     }
   }
 
-  return {parent_model_instance, local_name};
+  return {resolved_model_instance, unscoped_local_name};
 }
 // Given an ignition::math::Inertial object, extract a RotationalInertia object
 // for the rotational inertia of body B, about its center of mass Bcm and,
@@ -195,7 +196,7 @@ const Body<double>& GetBodyByLinkSpecificationName(
     return plant.world_body();
   } else {
     const auto [parent_model_instance, local_name] =
-        GetParentModelInstanceAndLocalName(link_name, model_instance, plant);
+        GetResolvedModelInstanceAndLocalName(link_name, model_instance, plant);
 
     return plant.GetBodyByName(local_name, parent_model_instance);
   }
@@ -623,7 +624,7 @@ const Frame<double>& AddFrameFromSpecification(
     parent_frame = &default_frame;
   } else {
     const auto [parent_model_instance, local_name] =
-        GetParentModelInstanceAndLocalName(frame_spec.AttachedTo(),
+        GetResolvedModelInstanceAndLocalName(frame_spec.AttachedTo(),
                                            model_instance, *plant);
     parent_frame = &plant->GetFrameByName(
         local_name, parent_model_instance);
@@ -788,7 +789,7 @@ ModelInstanceIndex AddModelFromSpecification(
 
     if (canonical_link != nullptr) {
       const auto [parent_model_instance, local_name] =
-          GetParentModelInstanceAndLocalName(canonical_link_name,
+          GetResolvedModelInstanceAndLocalName(canonical_link_name,
                                              model_instance, *plant);
       const Frame<double>& canonical_link_frame =
           plant->GetFrameByName(local_name, parent_model_instance);
@@ -986,6 +987,7 @@ std::vector<ModelInstanceIndex> AddModelsFromSdf(
 
     // TODO(eric.cousineau): Either support or explicitly prevent adding joints
     // via `//world/joint`, per this Bitbucket comment: https://bit.ly/2udQxhp
+
     for (uint64_t model_index = 0; model_index < world.ModelCount();
         ++model_index) {
       // Get the model.

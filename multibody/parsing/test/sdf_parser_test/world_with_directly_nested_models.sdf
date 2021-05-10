@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <sdf version="1.8">
-  <world name="SimWorld">
+  <world name="sim_world">
     <model name="parent_model">
       <model name="robot1">
         <link name="base_link"/>

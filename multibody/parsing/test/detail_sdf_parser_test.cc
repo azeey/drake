@@ -461,7 +461,6 @@ GTEST_TEST(SdfParser, FloatingBodyPose) {
 }
 
 GTEST_TEST(SdfParser, StaticModelSupported) {
-  // Test that static models are partially supported.
   {
     SCOPED_TRACE("Test that static models are partially supported");
     PlantAndSceneGraph pair = ParseTestString(R"""(
@@ -492,8 +491,6 @@ GTEST_TEST(SdfParser, StaticModelSupported) {
   }
 
   {
-    // Verify that static models don't need to have a canonical link. The model
-    // frame should be attached to the world frame.
     SCOPED_TRACE(
         "Verify that static models don't need to have a canonical link");
     PlantAndSceneGraph pair;
@@ -1323,7 +1320,7 @@ GTEST_TEST(SdfParser, LoadDirectlyNestedModelsInWorld) {
 
   PackageMap package_map;
   package_map.PopulateUpstreamToDrake(full_name);
-  DRAKE_ASSERT_NO_THROW(AddModelsFromSdfFile(full_name, package_map, &plant));
+  AddModelsFromSdfFile(full_name, package_map, &plant);
   plant.Finalize();
 
   // We should have loaded 3 more models.
@@ -1382,7 +1379,7 @@ GTEST_TEST(SdfParser, LoadDirectlyNestedModelsInModel) {
 
   PackageMap package_map;
   package_map.PopulateUpstreamToDrake(full_name);
-  DRAKE_ASSERT_NO_THROW(AddModelsFromSdfFile(full_name, package_map, &plant));
+  AddModelsFromSdfFile(full_name, package_map, &plant);
   plant.Finalize();
 
   // We should have loaded 4 more models.
@@ -1460,8 +1457,7 @@ GTEST_TEST(SdfParser, ModelPlacementFrame) {
   </model>
 
 </model>)""";
-  PlantAndSceneGraph pair;
-  DRAKE_ASSERT_NO_THROW(pair = ParseTestString(model_string, "1.8"));
+  PlantAndSceneGraph pair = ParseTestString(model_string, "1.8");
   ASSERT_NE(nullptr, pair.plant);
   pair.plant->Finalize();
   EXPECT_GT(pair.plant->num_positions(), 0);
