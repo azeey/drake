@@ -1547,16 +1547,13 @@ GTEST_TEST(SdfParser, PoseRelativeToMultiLevelNestedFrame) {
     <pose>0 0.2 0.0  0 0 0</pose>
     <model name='c'>
       <pose>0 0.0 0.3  0 0 0</pose>
-      <model name='d'>
-        <pose>0 0.0 0.0  0.0 0 0.6</pose>
-        <link name='e'>
-          <pose>0 0.0 0.0  0 0.5 0</pose>
-        </link>
-      </model>
+      <link name='d'>
+        <pose>0 0.0 0.0  0 0.5 0.6</pose>
+      </link>
     </model>
   </model>
-  <link name='f'>
-    <pose relative_to="b::c::d::e">0 0 0  0.4 0 0.0</pose>
+  <link name='e'>
+    <pose relative_to="b::c::d">0 0 0  0.4 0 0.0</pose>
   </link>
 </model>)""";
   PlantAndSceneGraph pair;
@@ -1566,13 +1563,13 @@ GTEST_TEST(SdfParser, PoseRelativeToMultiLevelNestedFrame) {
   EXPECT_GT(pair.plant->num_positions(), 0);
   auto context = pair.plant->CreateDefaultContext();
 
-  const RigidTransformd X_WF_expected(RollPitchYawd(0.4, 0.5, 0.6),
+  const RigidTransformd X_WE_expected(RollPitchYawd(0.4, 0.5, 0.6),
                                       Vector3d(0.1, 0.2, 0.3));
 
-  const RigidTransformd X_WF =
-      pair.plant->GetFrameByName("f").CalcPoseInWorld(*context);
+  const RigidTransformd X_WE =
+      pair.plant->GetFrameByName("e").CalcPoseInWorld(*context);
   EXPECT_TRUE(CompareMatrices(
-      X_WF_expected.GetAsMatrix4(), X_WF.GetAsMatrix4(), kEps));
+      X_WE_expected.GetAsMatrix4(), X_WE.GetAsMatrix4(), kEps));
 }
 
 // Verify that joint axis can be expressed in deeply nested frames.
@@ -1584,21 +1581,18 @@ GTEST_TEST(SdfParser, AxisXyzExperssedInMultiLevelNestedFrame) {
     <pose>0 0.2 0.0  0 0 0</pose>
     <model name='c'>
       <pose>0 0.0 0.3  0 0 0</pose>
-      <model name='d'>
-        <pose>0 0.0 0.0  0.0 0 {}</pose>
-        <link name='e'>
-          <pose>0 0.0 0.0  0 {} 0</pose>
-        </link>
-      </model>
+      <link name='d'>
+        <pose>0 0.0 0.0  0 {} {}</pose>
+      </link>
     </model>
   </model>
+  <link name='e'/>
   <link name='f'/>
-  <link name='g'/>
   <joint name="j" type="revolute">
-    <parent>f</parent>
-    <child>g</child>
+    <parent>e</parent>
+    <child>f</child>
     <axis>
-      <xyz expressed_in="b::c::d::e">1 0 0</xyz>
+      <xyz expressed_in="b::c::d">1 0 0</xyz>
     </axis>
   </joint>
 </model>)""", M_PI_2, M_PI_2);
@@ -1609,11 +1603,11 @@ GTEST_TEST(SdfParser, AxisXyzExperssedInMultiLevelNestedFrame) {
   EXPECT_GT(pair.plant->num_positions(), 0);
   auto context = pair.plant->CreateDefaultContext();
 
-  const RollPitchYawd R_WE(0.0, M_PI_2, M_PI_2);
+  const RollPitchYawd R_WD(0.0, M_PI_2, M_PI_2);
 
-  const Vector3d xyz_E(1, 0, 0);
+  const Vector3d xyz_D(1, 0, 0);
 
-  const Vector3d xyz_W_expected = R_WE.ToRotationMatrix() * xyz_E;
+  const Vector3d xyz_W_expected = R_WD.ToRotationMatrix() * xyz_D;
 
   DRAKE_EXPECT_NO_THROW(
       pair.plant->GetJointByName<RevoluteJoint>("j"));
@@ -1631,19 +1625,16 @@ GTEST_TEST(SdfParser, FrameAttachedToMultiLevelNestedFrame) {
     <pose>0 0.2 0.0  0 0 0</pose>
     <model name='c'>
       <pose>0 0.0 0.3  0 0 0</pose>
-      <model name='d'>
-        <pose>0 0.0 0.0  0.0 0 0.6</pose>
-        <link name='e'>
-          <pose>0 0.0 0.0  0 0.5 0</pose>
-        </link>
-      </model>
+      <link name='d'>
+        <pose>0 0.0 0.0  0 0.5 0.6</pose>
+      </link>
     </model>
   </model>
-  <frame name='f' attached_to='b::c::d::e'>
+  <frame name='e' attached_to='b::c::d'> <!-- Frame attached to a link -->
     <pose>0 0 0  0.4 0 0.0</pose>
   </frame>
-  <frame name='g' attached_to='b::c::d'>
-    <pose>0 0 0  0.4 0.5 0.0</pose>
+  <frame name='f' attached_to='b::c'> <!-- Frame attached to a model -->
+    <pose>0 0 0  0.4 0.5 0.6</pose>
   </frame>
 </model>)""";
   PlantAndSceneGraph pair;
@@ -1653,29 +1644,29 @@ GTEST_TEST(SdfParser, FrameAttachedToMultiLevelNestedFrame) {
   EXPECT_GT(pair.plant->num_positions(), 0);
   auto context = pair.plant->CreateDefaultContext();
 
+  const RigidTransformd X_WE_expected(RollPitchYawd(0.4, 0.5, 0.6),
+                                      Vector3d(0.1, 0.2, 0.3));
   const RigidTransformd X_WF_expected(RollPitchYawd(0.4, 0.5, 0.6),
                                       Vector3d(0.1, 0.2, 0.3));
-  const RigidTransformd X_WG_expected(RollPitchYawd(0.4, 0.5, 0.6),
-                                      Vector3d(0.1, 0.2, 0.3));
+
+  const auto &frame_E = pair.plant->GetFrameByName("e");
+  const RigidTransformd X_WE = frame_E.CalcPoseInWorld(*context);
+  EXPECT_TRUE(CompareMatrices(
+      X_WE_expected.GetAsMatrix4(), X_WE.GetAsMatrix4(), kEps));
 
   const auto &frame_F = pair.plant->GetFrameByName("f");
   const RigidTransformd X_WF = frame_F.CalcPoseInWorld(*context);
   EXPECT_TRUE(CompareMatrices(
       X_WF_expected.GetAsMatrix4(), X_WF.GetAsMatrix4(), kEps));
 
-  const auto &frame_G = pair.plant->GetFrameByName("g");
-  const RigidTransformd X_WG = frame_G.CalcPoseInWorld(*context);
-  EXPECT_TRUE(CompareMatrices(
-      X_WG_expected.GetAsMatrix4(), X_WG.GetAsMatrix4(), kEps));
-
   // Also check that the frame is attached to the right body
-  ModelInstanceIndex model_d_instance =
-      pair.plant->GetModelInstanceByName("a::b::c::d");
-  EXPECT_EQ(frame_F.body().node_index(),
-            pair.plant->GetBodyByName("e", model_d_instance).node_index());
+  ModelInstanceIndex model_c_instance =
+      pair.plant->GetModelInstanceByName("a::b::c");
+  EXPECT_EQ(frame_E.body().node_index(),
+            pair.plant->GetBodyByName("d", model_c_instance).node_index());
 
-  EXPECT_EQ(frame_G.body().node_index(),
-            pair.plant->GetBodyByName("e", model_d_instance).node_index());
+  EXPECT_EQ(frame_F.body().node_index(),
+            pair.plant->GetBodyByName("d", model_c_instance).node_index());
 }
 
 // Verify frames and links can have the same local name without violating name
